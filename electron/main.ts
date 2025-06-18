@@ -26,8 +26,41 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win: BrowserWindow | null
 
 async function callOllama(title: string, summary: string): Promise<number> {
-  console.log(`Calling Ollama with title: ${title} and summary: ${summary}`);
+  if(!title || !summary) {
+    return -1;
+  }
   return Math.random();
+}
+
+function extractAllImages(item: any): string[] {
+  const images: { url: string; width: number }[] = [];
+
+  function addImage(obj: any) {
+    const url = obj?.url || obj?.$?.url;
+    const widthStr = obj?.width || obj?.$?.width;
+    if (url) {
+      const width = widthStr ? parseInt(widthStr, 10) : 0;
+      images.push({ url, width });
+    }
+  }
+
+  const mediaContent = item['media:content'] || item.image;
+  if(Array.isArray(mediaContent)) {
+    mediaContent.forEach(addImage);
+  } else if(mediaContent && typeof mediaContent === 'object') {
+    addImage(mediaContent);
+  }
+
+  if(item.enclosure) {
+    if(Array.isArray(item.enclosure)) {
+      item.enclosure.forEach(addImage);
+    } else if(typeof item.enclosure === 'object') {
+      addImage(item.enclosure);
+    }
+  }
+
+  const sortedImages = Array.from(new Map(images.map(img => [img.url, img])).values()).sort((a, b) => b.width - a.width);
+  return sortedImages.map(img => img.url);
 }
 
 async function fetchAndRank() {
@@ -36,15 +69,15 @@ async function fetchAndRank() {
     customFields: {
       item: [
         ['media:content', 'enclosure'],
+        ['media:thumbnail', 'enclosure'],
       ],
     },
   });
   const feed = await parser.parseURL('https://www.theguardian.com/europe/rss');
-  console.log(feed.items[0].enclosure?.$?.url);
   const withScores = await Promise.all(
     feed.items.map(async (item) => ({
       title: item.title ?? '',
-      image: item.enclosure?.$?.url ?? '',
+      image: extractAllImages(item) ?? '',
       summary: item.contentSnippet ?? '',
       link: item.link ?? '',
       variant: ['left', 'middle', 'right'][Math.floor(Math.random() * 3)],
@@ -52,7 +85,6 @@ async function fetchAndRank() {
     }))
   );
   withScores.sort((a, b) => b.score - a.score);
-  // console.log('Fetched and ranked articles:', withScores.slice(0, 20));
   win?.webContents.send('news:update', withScores.slice(0, 20));
 }
 

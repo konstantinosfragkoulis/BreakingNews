@@ -6,7 +6,6 @@ type MainContentProps = {
 };
 
 export default function MainContent({ articles }: MainContentProps) {
-    console.log("\n\n\n\n\n\n\n\n\n\\n\n\n\n\n\n\nMainContent rendered with articles:\n\n\n\n\n\n\n\n\n\n", articles);
     return (
         <div className="main-grid">
             {articles.map((article, i) => {

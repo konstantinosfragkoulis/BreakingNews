@@ -26,7 +26,7 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 let win: BrowserWindow | null
 
 async function callOllama(title: string, summary: string): Promise<number> {
-  // console.log(`Calling Ollama with title: ${title} and summary: ${summary}`);
+  console.log(`Calling Ollama with title: ${title} and summary: ${summary}`);
   return Math.random();
 }
 
@@ -40,10 +40,11 @@ async function fetchAndRank() {
     },
   });
   const feed = await parser.parseURL('https://www.theguardian.com/europe/rss');
+  console.log(feed.items[0].enclosure?.$?.url);
   const withScores = await Promise.all(
     feed.items.map(async (item) => ({
       title: item.title ?? '',
-      image: item['media:content']?.$?.url ?? '',
+      image: item.enclosure?.$?.url ?? '',
       summary: item.contentSnippet ?? '',
       link: item.link ?? '',
       variant: ['left', 'middle', 'right'][Math.floor(Math.random() * 3)],

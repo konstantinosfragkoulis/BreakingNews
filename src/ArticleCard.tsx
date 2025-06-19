@@ -4,7 +4,7 @@ export type Article = {
   summary: string;
   link: string;
   variant: string;
-  score?: number;
+  score: number;
 };
 
 export default function ArticleCard({
@@ -23,8 +23,8 @@ export default function ArticleCard({
     return (
         <div className={variant}>
             <a href={link} target="_blank"><h2>{title}</h2></a>
-            <img src={image} alt="" />
-            <p>{summary}</p>
+            <img className={variant} src={image} alt="" />
+            <p className={variant}>{summary}</p>
         </div>
     );
 };

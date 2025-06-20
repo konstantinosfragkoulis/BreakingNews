@@ -1,7 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Merriweather:opsz@18..144&display=swap');
-
 :root {
-  font-family: Merriweather, Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: 'Merriweather', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
 

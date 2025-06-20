@@ -26,3 +26,8 @@
     object-fit: contain;
     max-width: 100%;
 }
+
+a {
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.87);
+}

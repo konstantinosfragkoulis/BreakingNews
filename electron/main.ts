@@ -4,6 +4,7 @@ import path from 'node:path'
 import { parse } from 'rss-to-json'
 import { Article } from '../src/ArticleCard'
 import Parser from 'rss-parser'
+import { callOllama } from './ollama'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -27,13 +28,6 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 
 let win: BrowserWindow | null
 
-async function callOllama(title: string, summary: string): Promise<number> {
-  if(!title || !summary) {
-    return -1;
-  }
-  return Math.random();
-}
-
 async function fetchAndRank() {
   console.log('Fetching and ranking news articles...');
 
@@ -43,10 +37,10 @@ async function fetchAndRank() {
     var _rss = await parser.parseURL('https://www.theguardian.com/europe/rss');
     var articles: Article[] = [];
 
-    for(let i = 0; i < rss.items.length; ++i) {
+    for(let i = 0; i < 30; ++i) {
         var imageUrl = '';
         var imageWidth = 0;
-        console.log(rss.items[i].enclosures);
+        // console.log(rss.items[i].enclosures);
         if(Array.isArray(rss.items[i].enclosures?.[0])) {
             for(const enc of rss.items[i].enclosures[0]) {
                 const width = parseInt(enc.width, 10);
@@ -63,7 +57,7 @@ async function fetchAndRank() {
             link: _rss.items[i]?.link ?? '',
             image: imageUrl,
             variant: ['left', 'middle', 'right'][Math.floor(Math.random() * 3)],
-            score: await callOllama(_rss.items[i]?.title ?? '', _rss.items[i]?.contentSnippet?.replace(/Continue reading\.\.\..*$/, '').trim() ?? ''),
+            score: await callOllama(_rss.items[i]?.title ?? '', _rss.items[i]?.contentSnippet?.replace(/Continue reading\.\.\..*$/, '').trim() ?? '', _rss.items[i]?.pubDate ?? ''),
         };
 
         articles.push(article);

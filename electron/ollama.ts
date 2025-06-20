@@ -1,6 +1,5 @@
-import ollama from 'ollama'
+
 import { z } from 'zod'
-import { zodToJsonSchema } from 'zod-to-json-schema'
 
 const Importance = z.object({
     importance: z.number(),
@@ -56,18 +55,55 @@ export async function callOllama(title: string, summary: string, date: string): 
     if(!title || !summary) {
         return -1;
     }
-  
-    const response = await ollama.chat({
-        model: 'gemma3',
-        messages: [{
-            role: 'user',
-            content: createPrompt(title, summary, date, INTERESTS, NOT_INTERESTED)
-        }],
-        format: zodToJsonSchema(Importance),
-    });
 
-    const importance = Importance.parse(JSON.parse(response.message.content));
-    console.log(`${title}`);
-    console.log(importance);
-    return importance.importance;
+    try {
+        const apiResponse = await fetch('https://ai.hackclub.com/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                model: 'meta-llama/llama-4-maverick-17b-128e-instruct',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are an API that returns a JSON object with a single key "importance" which is a number from 0 to 100. Do not return any other text or formatting.'
+                    },
+                    {
+                        role: 'user',
+                        content: createPrompt(title, summary, date, INTERESTS, NOT_INTERESTED)
+                    }
+                ],
+                response_format: {
+                    type: "json_object"
+                },
+                format: {
+                    type: 'object',
+                    properties: {
+                        'importance': {
+                            type: 'number'
+                        }
+                    },
+                    required: 'importance'
+                }
+            }),
+        });
+
+        if(!apiResponse.ok) {
+            console.error(`API call failed: ${apiResponse.status} ${apiResponse.statusText}`);
+            const errorBody = await apiResponse.text();
+            console.error('Error body:', errorBody);
+            return -1;
+        }
+
+        const responseData = await apiResponse.json();const messageContent = responseData.choices[0].message.content;
+
+        const importance = Importance.parse(JSON.parse(messageContent));
+        console.log(`${title}`);
+        console.log(importance);
+        return importance.importance;
+    } catch (error) {
+        console.error('Failed to call API or parse response:', error);
+        return -1;
+    }
 }

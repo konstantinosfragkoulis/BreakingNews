@@ -5,6 +5,7 @@ import { parse } from 'rss-to-json'
 import { Article } from '../src/ArticleCard'
 import Parser from 'rss-parser'
 import { callOllama } from './ollama'
+import { saveScore, getScore, hashArticle } from './cache'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -38,6 +39,12 @@ async function fetchAndRank() {
     var articles: Article[] = [];
 
     for(let i = 0; i < 30; ++i) {
+        const articleTitle = _rss.items[i]?.title ?? '';
+        const articleSummary = _rss.items[i]?.contentSnippet?.replace(/Continue reading\.\.\..*$/, '').trim() ?? '';
+        const articleLink = _rss.items[i]?.link ?? '';
+        const articleDate = _rss.items[i]?.pubDate ?? '';
+        const articleHash = hashArticle(articleTitle);
+
         var imageUrl = '';
         var imageWidth = 0;
         // console.log(rss.items[i].enclosures);
@@ -51,13 +58,19 @@ async function fetchAndRank() {
             }
         }
 
+        let score = await getScore(articleHash);
+        if(score === null) {
+            score = await callOllama(articleTitle, articleSummary, articleDate);
+            await saveScore(articleHash, score, articleDate);
+        }
+
         var article: Article = {
-            title: _rss.items[i]?.title ?? '',
-            summary: (_rss.items[i]?.contentSnippet?.replace(/Continue reading\.\.\..*$/, '').trim() ?? ''),
-            link: _rss.items[i]?.link ?? '',
+            title: articleTitle,
+            summary: articleSummary,
+            link: articleLink,
             image: imageUrl,
             variant: ['left', 'middle', 'right'][Math.floor(Math.random() * 3)],
-            score: await callOllama(_rss.items[i]?.title ?? '', _rss.items[i]?.contentSnippet?.replace(/Continue reading\.\.\..*$/, '').trim() ?? '', _rss.items[i]?.pubDate ?? ''),
+            score: score,
         };
 
         articles.push(article);
@@ -74,27 +87,32 @@ async function fetchAndRank() {
 }
 
 function createWindow() {
-  win = new BrowserWindow({
-    icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.mjs'),
-    },
-  })
+    win = new BrowserWindow({
+        icon: path.join(process.env.VITE_PUBLIC, 'electron-vite.svg'),
+        webPreferences: {
+        preload: path.join(__dirname, 'preload.mjs'),
+        },
+    })
 
-  // Test active push message to Renderer-process.
-  win.webContents.on('did-finish-load', () => {
-    win?.webContents.send('main-process-message', (new Date).toLocaleString())
-  })
+    // Test active push message to Renderer-process.
+    win.webContents.on('did-finish-load', () => {
+        win?.webContents.send('main-process-message', (new Date).toLocaleString())
+    })
 
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL)
-  } else {
-    // win.loadFile('dist/index.html')
-    win.loadFile(path.join(RENDERER_DIST, 'index.html'))
-  }
+    if (VITE_DEV_SERVER_URL) {
+        win.loadURL(VITE_DEV_SERVER_URL)
+    } else {
+        // win.loadFile('dist/index.html')
+        win.loadFile(path.join(RENDERER_DIST, 'index.html'))
+    }
 
-  fetchAndRank()
-  setInterval(fetchAndRank, 1000 * 60 * 5);
+    // fetchAndRank()
+    setInterval(fetchAndRank, 1000 * 60 * 5);
+
+    win.webContents.on('did-finish-load', () => {
+        win?.webContents.send('main-process-message', (new Date).toLocaleString())
+        fetchAndRank()
+    });
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common

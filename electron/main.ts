@@ -5,8 +5,8 @@ import { parse } from 'rss-to-json'
 import { Article } from '../src/ArticleCard'
 import Parser from 'rss-parser'
 import { callOllama } from './ollama'
-import { saveScore, getScore, hashArticle, hashPreferences, getPreferencesHash } from './cache'
-import { setUserInterest, setUserNotInterests, getUserInterests, getUserNotInterests } from './UserPreferences'
+import { saveScore, getScore, hashArticle, hashPreferences } from './cache'
+import { setUserInterest, setUserNotInterests, getUserInterests, getUserNotInterests, loadUserPreferencesFromCache } from './UserPreferences'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -33,6 +33,7 @@ let win: BrowserWindow | null
 async function fetchAndRank() {
   console.log('Fetching and ranking news articles...');
   var fromCache = 0;
+  loadUserPreferencesFromCache();
   const currentPreferencesHash = hashPreferences(getUserInterests(), getUserNotInterests());
 
   try {
@@ -52,7 +53,7 @@ async function fetchAndRank() {
 
         var imageUrl = '';
         var imageWidth = 0;
-        // console.log(rss.items[i].enclosures);
+        
         if(Array.isArray(rss.items[i].enclosures?.[0])) {
             for(const enc of rss.items[i].enclosures[0]) {
                 const width = parseInt(enc.width, 10);
@@ -63,11 +64,10 @@ async function fetchAndRank() {
             }
         }
 
-        let score = await getScore(articleHash);
-        const cachedPreferencesHash = getPreferencesHash(articleHash);
-        if(score === null || cachedPreferencesHash !== currentPreferencesHash) {
+        let score = await getScore(articleHash, currentPreferencesHash);
+        if(score === null) {
             score = await callOllama(articleTitle, articleSummary, articleDate);
-            await saveScore(articleHash, score, articleDate);
+            await saveScore(articleTitle, score, articleDate);
         } else {
             fromCache++;
         }
@@ -83,14 +83,12 @@ async function fetchAndRank() {
 
         articles.push(article);
         win?.webContents.send('news:progress', { current: i + 1, total: totalArticles });
-        // console.log(article);
     }
 
     console.log("Parsed", articles.length, "articles");
     console.log(fromCache, "were from cache")
     articles.sort((a, b) => b.score - a.score);
     win?.webContents.send('news:update', articles.slice(0, 20));
-    // console.log(articles.slice(0, 20));
   } catch(e) {
     console.error("Error fetching and ranking aticles: ", e);
     win?.webContents.send('news:update', []);
@@ -117,10 +115,12 @@ function createWindow() {
         win.loadFile(path.join(RENDERER_DIST, 'index.html'))
     }
 
-    // TODO: UI to select interests
-    // TODO: Save user interests to config file
-    setUserInterest(['war', 'politics', 'europe', 'us', 'russia', 'ukraine', 'middle_east', 'violence', 'disasters']);
-    setUserNotInterests(['science', 'technology', 'business_finance', 'health_medical', 'environment_climate', 'sports', 'entertainment_culture', 'education', 'crime_justice', 'lifestyle_fashion']);
+    loadUserPreferencesFromCache();
+    if(getUserInterests().length === 0 && getUserNotInterests().length === 0) {
+        // TODO: UI to select interests
+        setUserInterest(['war', 'politics', 'europe', 'us', 'russia', 'ukraine', 'middle_east', 'violence', 'disasters']);
+        setUserNotInterests(['science', 'technology', 'business_finance', 'health_medical', 'environment_climate', 'sports', 'entertainment_culture', 'education', 'crime_justice', 'lifestyle_fashion']);
+    }
 
     // fetchAndRank()
     setInterval(fetchAndRank, 1000 * 60 * 5);

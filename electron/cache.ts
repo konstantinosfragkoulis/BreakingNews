@@ -2,15 +2,21 @@ import fs from 'fs';
 import crypto from 'crypto';
 import os from 'os';
 import path from 'path';
+
 import { getUserInterests, getUserNotInterests } from './UserPreferences';
 
-const CACHE_FILE: string = path.join(os.homedir(), '.article_scores.json');
+const CACHE_FILE: string = path.join(os.homedir(), '.breakingnews.json');
 
-type ArticleScore = {
+type ArticleScores = {
     title: string;
-    score: number;
     pubDate: string;
-    preferencesHash: string;
+    scores: Record<string, number>;
+};
+
+type CacheData = {
+    articles: Record<string, ArticleScores>;
+    userInterests: string[];
+    userNotInterests: string[];
 };
 
 export function hashArticle(title: string): string {
@@ -22,39 +28,73 @@ export function hashPreferences(interests: string[], notInterests: string[]): st
     return crypto.createHash('sha256').update(combined).digest('hex');
 }
 
-export function saveScore(title: string, score: number, pubDate: string): void {
-    const scores = loadScores();
-    const hash = hashArticle(title);
-    const interests = getUserInterests();
-    const notInterests = getUserNotInterests();
-    const preferencesHash = hashPreferences(interests, notInterests);
-    
-    scores[hash] = { title, score, pubDate, preferencesHash };
-    fs.writeFileSync(CACHE_FILE, JSON.stringify(scores, null, 2));
-}
-
-export function loadScores(): Record<string, ArticleScore> {
+export function loadCacheData(): CacheData {
     if(fs.existsSync(CACHE_FILE)) {
         const data = fs.readFileSync(CACHE_FILE, 'utf-8');
-        return JSON.parse(data);
+        const parsedData: CacheData = JSON.parse(data);
+
+        return {
+            articles: parsedData.articles || {},
+            userInterests: parsedData.userInterests || [],
+            userNotInterests: parsedData.userNotInterests || [],
+        };
     }
-    return {};
+    return {
+        articles: {},
+        userInterests: [],
+        userNotInterests: [],
+    };
 }
 
-export function getScore(title: string): number | null {
-    const scores = loadScores();
+export function saveCacheData(data: CacheData): void {
+    fs.writeFileSync(CACHE_FILE, JSON.stringify(data, null, 2));
+}
+
+export function saveScore(title: string, score: number, pubDate: string): void {
+    const data = loadCacheData();
     const hash = hashArticle(title);
-    return scores[hash] ? scores[hash].score : null;
+    const preferencesHash = hashPreferences(getUserInterests(), getUserNotInterests());
+    
+    if(!data.articles[hash]) {
+        data.articles[hash] = {
+            title,
+            pubDate,
+            scores: {}
+        };
+    }
+
+    data.articles[hash].scores[preferencesHash] = score;
+    saveCacheData(data);
+}
+
+export function getScore(articleHash: string, preferencesHash: string): number | null {
+    const data = loadCacheData();
+    const article = data.articles[articleHash];
+    
+    if(article && article.scores[preferencesHash] !== undefined) {
+        return article.scores[preferencesHash];
+    }
+    return null;
 }
 
 export function getPubDate(title: string): string | null {
-    const scores = loadScores();
+    const data = loadCacheData();
     const hash = hashArticle(title);
-    return scores[hash] ? scores[hash].pubDate : null;
+    const article = data.articles[hash];
+    return article ? article.pubDate : null;
 }
 
-export function getPreferencesHash(title: string): string | null {
-    const scores = loadScores();
-    const hash = hashArticle(title);
-    return scores[hash] ? scores[hash].preferencesHash : null;
+export function saveUserPreferences(interests: string[], notInterests: string[]): void {
+    const data = loadCacheData();
+    data.userInterests = interests;
+    data.userNotInterests = notInterests;
+    saveCacheData(data);
+}
+
+export function loadUserPreferences(): { interests: string[], notInterests: string[] } {
+    const data = loadCacheData();
+    return {
+        interests: data.userInterests,
+        notInterests: data.userNotInterests
+    };
 }

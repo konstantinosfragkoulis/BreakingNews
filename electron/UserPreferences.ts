@@ -1,3 +1,5 @@
+import { saveUserPreferences, loadUserPreferences } from "./cache";
+
 export const TOPIC_KEYWORDS = {
     'war': ['war', 'conflict', 'battle', 'military', 'armed forces', 'invasion', 'combat', 'warfare', 'defense', 'pentagon', 'ministry of defence', 'hostilities', 'ceasefire', 'airstrike', 'artillery', 'troop deployment', 'military exercises', 'geopolitical tension'],
     'politics': ['election', 'government', 'parliament', 'congress', 'politics', 'policy', 'legislation', 'democratic', 'republican', 'senate', 'lawmaking', 'political party', 'diplomacy', 'geopolitics', 'summit', 'treaty', 'foreign policy', 'public policy', 'governance', 'statesman', 'political debate'],
@@ -33,10 +35,18 @@ export function getUserNotInterests(): string[] {
 
 export function setUserInterest(newInterests: string[]): string[] {
     INTERESTS = newInterests;
+    saveUserPreferences(INTERESTS, NOT_INTERESTED);
     return INTERESTS;
 }
 
 export function setUserNotInterests(newInterests: string[]): string[] {
     NOT_INTERESTED = newInterests;
+    saveUserPreferences(INTERESTS, NOT_INTERESTED);
     return NOT_INTERESTED;
+}
+
+export function loadUserPreferencesFromCache(): void {
+    const preferences = loadUserPreferences();
+    INTERESTS = preferences.interests;
+    NOT_INTERESTED = preferences.notInterests;
 }

@@ -5,7 +5,8 @@ import { parse } from 'rss-to-json'
 import { Article } from '../src/ArticleCard'
 import Parser from 'rss-parser'
 import { callOllama } from './ollama'
-import { saveScore, getScore, hashArticle } from './cache'
+import { saveScore, getScore, hashArticle, hashPreferences, getPreferencesHash } from './cache'
+import { setUserInterest, setUserNotInterests, getUserInterests, getUserNotInterests } from './UserPreferences'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -31,14 +32,18 @@ let win: BrowserWindow | null
 
 async function fetchAndRank() {
   console.log('Fetching and ranking news articles...');
+  var fromCache = 0;
+  const currentPreferencesHash = hashPreferences(getUserInterests(), getUserNotInterests());
 
   try {
     var rss = await parse('https://www.theguardian.com/europe/rss');
     const parser = new Parser();
     var _rss = await parser.parseURL('https://www.theguardian.com/europe/rss');
     var articles: Article[] = [];
+    const totalArticles = rss.items.length;
+    win?.webContents.send('news:progress', { current: 0, total: totalArticles });
 
-    for(let i = 0; i < 30; ++i) {
+    for(let i = 0; i < totalArticles; ++i) {
         const articleTitle = _rss.items[i]?.title ?? '';
         const articleSummary = _rss.items[i]?.contentSnippet?.replace(/Continue reading\.\.\..*$/, '').trim() ?? '';
         const articleLink = _rss.items[i]?.link ?? '';
@@ -59,9 +64,12 @@ async function fetchAndRank() {
         }
 
         let score = await getScore(articleHash);
-        if(score === null) {
+        const cachedPreferencesHash = getPreferencesHash(articleHash);
+        if(score === null || cachedPreferencesHash !== currentPreferencesHash) {
             score = await callOllama(articleTitle, articleSummary, articleDate);
             await saveScore(articleHash, score, articleDate);
+        } else {
+            fromCache++;
         }
 
         var article: Article = {
@@ -74,15 +82,18 @@ async function fetchAndRank() {
         };
 
         articles.push(article);
+        win?.webContents.send('news:progress', { current: i + 1, total: totalArticles });
         // console.log(article);
     }
 
-    console.log("Parsed ", articles.length, " articles");
+    console.log("Parsed", articles.length, "articles");
+    console.log(fromCache, "were from cache")
     articles.sort((a, b) => b.score - a.score);
     win?.webContents.send('news:update', articles.slice(0, 20));
     // console.log(articles.slice(0, 20));
   } catch(e) {
     console.error("Error fetching and ranking aticles: ", e);
+    win?.webContents.send('news:update', []);
   }
 }
 
@@ -105,6 +116,11 @@ function createWindow() {
         // win.loadFile('dist/index.html')
         win.loadFile(path.join(RENDERER_DIST, 'index.html'))
     }
+
+    // TODO: UI to select interests
+    // TODO: Save user interests to config file
+    setUserInterest(['war', 'politics', 'europe', 'us', 'russia', 'ukraine', 'middle_east', 'violence', 'disasters']);
+    setUserNotInterests(['science', 'technology', 'business_finance', 'health_medical', 'environment_climate', 'sports', 'entertainment_culture', 'education', 'crime_justice', 'lifestyle_fashion']);
 
     // fetchAndRank()
     setInterval(fetchAndRank, 1000 * 60 * 5);

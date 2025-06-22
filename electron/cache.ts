@@ -17,6 +17,7 @@ type CacheData = {
     articles: Record<string, ArticleScores>;
     userInterests: string[];
     userNotInterests: string[];
+    feeds: string[];
 };
 
 export function hashArticle(title: string): string {
@@ -37,12 +38,14 @@ export function loadCacheData(): CacheData {
             articles: parsedData.articles || {},
             userInterests: parsedData.userInterests || [],
             userNotInterests: parsedData.userNotInterests || [],
+            feeds: parsedData.feeds || [],
         };
     }
     return {
         articles: {},
         userInterests: [],
         userNotInterests: [],
+        feeds: [],
     };
 }
 
@@ -97,4 +100,15 @@ export function loadUserPreferences(): { interests: string[], notInterests: stri
         interests: data.userInterests,
         notInterests: data.userNotInterests
     };
+}
+
+export function saveFeeds(feeds: string[]): void {
+    const data = loadCacheData();
+    data.feeds = feeds;
+    saveCacheData(data);
+}
+
+export function loadFeeds(): string[] {
+    const data = loadCacheData();
+    return data.feeds || [];
 }

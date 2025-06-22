@@ -5,7 +5,7 @@ import { parse } from 'rss-to-json'
 import { Article } from '../src/ArticleCard'
 import Parser from 'rss-parser'
 import { callOllama } from './ollama'
-import { saveScore, getScore, hashArticle, hashPreferences } from './cache'
+import { saveScore, getScore, hashArticle, hashPreferences, saveFeeds, loadFeeds } from './cache'
 import { setUserInterest, setUserNotInterests, getUserInterests, getUserNotInterests, loadUserPreferencesFromCache } from './UserPreferences'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -30,16 +30,16 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 
 let win: BrowserWindow | null
 
-async function fetchAndRank() {
+async function fetchAndRank(feed: string) {
   console.log('Fetching and ranking news articles...');
   var fromCache = 0;
   loadUserPreferencesFromCache();
   const currentPreferencesHash = hashPreferences(getUserInterests(), getUserNotInterests());
 
   try {
-    var rss = await parse('https://www.theguardian.com/europe/rss');
+    var rss = await parse(feed);
     const parser = new Parser();
-    var _rss = await parser.parseURL('https://www.theguardian.com/europe/rss');
+    var _rss = await parser.parseURL(feed);
     var articles: Article[] = [];
     const totalArticles = rss.items.length;
     win?.webContents.send('news:progress', { current: 0, total: totalArticles });
@@ -93,6 +93,18 @@ async function fetchAndRank() {
     console.error("Error fetching and ranking aticles: ", e);
     win?.webContents.send('news:update', []);
   }
+} 
+
+function parseFeeds() {
+    let feeds = loadFeeds();
+    if(feeds.length === 0) {
+        feeds = ['https://www.theguardian.com/europe/rss'];
+        saveFeeds(feeds);
+    }
+    
+    for(const feed of feeds) {
+        fetchAndRank(feed);
+    }
 }
 
 function createWindow() {
@@ -123,11 +135,11 @@ function createWindow() {
     }
 
     // fetchAndRank()
-    setInterval(fetchAndRank, 1000 * 60 * 5);
+    setInterval(parseFeeds, 1000 * 60 * 5);
 
     win.webContents.on('did-finish-load', () => {
         win?.webContents.send('main-process-message', (new Date).toLocaleString())
-        fetchAndRank()
+        parseFeeds()
     });
 }
 

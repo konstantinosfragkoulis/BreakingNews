@@ -1,6 +1,12 @@
 {
   "name": "breakingnews",
   "productName": "Breaking News",
+  "description": "A desktop application that ranks, summarizes, and presents the latest news stories using AI.",
+  "icon": "public/logo.svg",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/breakingnews.git"
+  },
   "private": true,
   "version": "1.0.0",
   "type": "module",

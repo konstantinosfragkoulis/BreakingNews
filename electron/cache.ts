@@ -4,29 +4,19 @@ import os from 'os';
 import path from 'path';
 
 import { getUserInterests, getUserNotInterests } from './UserPreferences';
+import { AppSettings, CacheData, Feed } from './types';
 
 const CACHE_FILE: string = path.join(os.homedir(), '.breakingnews.json');
-
-type ArticleScores = {
-    title: string;
-    pubDate: string;
-    scores: Record<string, number>;
-};
-
-type CacheData = {
-    articles: Record<string, ArticleScores>;
-    userInterests: string[];
-    userNotInterests: string[];
-    feeds: string[];
-};
 
 export function hashArticle(title: string): string {
     return crypto.createHash('sha256').update(title).digest('hex');
 }
 
 export function hashPreferences(interests: string[], notInterests: string[]): string {
-    const combined = [...interests, ...notInterests].sort().join(',');
-    return crypto.createHash('sha256').update(combined).digest('hex');
+    const interestsHash = crypto.createHash('sha256').update(interests.sort().join(',')).digest('hex');
+    const notInterestsHash = crypto.createHash('sha256').update(notInterests.sort().join(',')).digest('hex');
+    const combined = crypto.createHash('sha256').update(`${interestsHash}:${notInterestsHash}`).digest('hex');
+    return combined;
 }
 
 export function loadCacheData(): CacheData {
@@ -36,16 +26,22 @@ export function loadCacheData(): CacheData {
 
         return {
             articles: parsedData.articles || {},
-            userInterests: parsedData.userInterests || [],
-            userNotInterests: parsedData.userNotInterests || [],
-            feeds: parsedData.feeds || [],
+            settings: parsedData.settings || {
+                theme: 'system',
+                feeds: [],
+                userInterests: [],
+                userNotInterests: []
+            }
         };
     }
     return {
         articles: {},
-        userInterests: [],
-        userNotInterests: [],
-        feeds: [],
+        settings: {
+            theme: 'system',
+            feeds: [],
+            userInterests: [],
+            userNotInterests: []
+        }
     };
 }
 
@@ -89,26 +85,47 @@ export function getPubDate(title: string): string | null {
 
 export function saveUserPreferences(interests: string[], notInterests: string[]): void {
     const data = loadCacheData();
-    data.userInterests = interests;
-    data.userNotInterests = notInterests;
+    data.settings.userInterests = interests;
+    data.settings.userNotInterests = notInterests;
     saveCacheData(data);
 }
 
 export function loadUserPreferences(): { interests: string[], notInterests: string[] } {
     const data = loadCacheData();
     return {
-        interests: data.userInterests,
-        notInterests: data.userNotInterests
+        interests: data.settings.userInterests,
+        notInterests: data.settings.userNotInterests
     };
 }
 
-export function saveFeeds(feeds: string[]): void {
+export function saveFeeds(feeds: Feed[]): void {
     const data = loadCacheData();
-    data.feeds = feeds;
+    data.settings.feeds = feeds;
     saveCacheData(data);
 }
 
-export function loadFeeds(): string[] {
+export function loadFeeds(): Feed[] {
     const data = loadCacheData();
-    return data.feeds || [];
+    return data.settings.feeds || [];
+}
+
+export function loadSettings(): AppSettings {
+    const data = loadCacheData();
+    return data.settings || {
+        theme: 'system',
+        feeds: [],
+        userInterests: [],
+        userNotInterests: [],
+    };
+}
+
+export function saveSettings(settings: AppSettings): void {
+    const data = loadCacheData();
+    data.settings = settings;
+    saveCacheData(data);
+}
+
+export function getEnabledFeeds(): Feed[] {
+    const settings = loadSettings();
+    return settings.feeds.filter(feed => feed.enabled);
 }

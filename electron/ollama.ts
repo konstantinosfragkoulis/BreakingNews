@@ -1,5 +1,6 @@
 import { z } from 'zod'
-import { getUserInterests, getUserNotInterests, TOPIC_KEYWORDS } from './UserPreferences';
+import { getUserInterests, getUserNotInterests } from './UserPreferences';
+import { TOPIC_KEYWORDS } from './types';
 
 const Importance = z.object({
     importance: z.number(),

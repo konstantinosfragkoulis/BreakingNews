@@ -1,8 +1,6 @@
 # Breaking News
 
-A desktop app that uses local LLMs to rank, summarize, and present the most important news stories.
-
-This app requires [Ollama](https://ollama.com) to be installed, alongside a language model.
+A desktop app that uses LLMs to rank, summarize, and present the most important news stories.
 
 ## How to compile
 ```

@@ -149,13 +149,13 @@ export default function Settings({ onClose }: SettingsProps) {
                                                 className={`topic-btn ${isInterested ? `active interested` : ''}`}
                                                 onClick={() => handleTopicToggle(topic, true)}
                                             >
-                                                Interested
+                                                👍
                                             </button>
                                             <button
                                                 className={`topic-btn ${isNotInterested ? `active not-interested` : ''}`}
                                                 onClick={() => handleTopicToggle(topic, false)}
                                             >
-                                                Not Interested
+                                                👎
                                             </button>
                                         </div>
                                     </div>

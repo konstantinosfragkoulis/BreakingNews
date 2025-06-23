@@ -1,5 +1,5 @@
 import ArticleCard from "./ArticleCard";
-import { Article } from "./ArticleCard";
+import { Article } from "../electron/types";
 
 type MainContentProps = {
     articles: Article[];
@@ -18,6 +18,7 @@ export default function MainContent({ articles }: MainContentProps) {
                             summary={article.summary}
                             link={article.link}
                             column={article.column}
+                            variant={article.variant}
                         />
                     );
                 }

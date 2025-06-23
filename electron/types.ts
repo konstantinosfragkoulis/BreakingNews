@@ -21,6 +21,17 @@ export const TOPIC_KEYWORDS = {
 };
 
 export type Theme = 'light' | 'dark' | 'system';
+export type ArticleVariant = 'default' | 'compact' | 'featured' | 'image-focus';
+
+export type Article = {
+    title: string;
+    image: string;
+    summary: string;
+    link: string;
+    column: string;
+    score: number;
+    variant: ArticleVariant;
+};
 
 export type Feed = {
     url: string;

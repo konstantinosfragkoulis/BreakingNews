@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { create } from 'zustand';
-import { Article } from './ArticleCard';
+import { Article } from "../electron/types";
 
 type Progress = {
     current: number;

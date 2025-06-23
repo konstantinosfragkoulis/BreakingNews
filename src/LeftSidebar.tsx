@@ -1,5 +1,5 @@
 import ArticleCard from "./ArticleCard"
-import { Article } from "./ArticleCard"
+import { Article } from "../electron/types";
 
 type MainContentProps = {
     articles: Article[];

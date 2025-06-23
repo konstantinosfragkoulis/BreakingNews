@@ -2,13 +2,12 @@ import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { parse } from 'rss-to-json'
-import { Article } from '../src/ArticleCard'
 import Parser from 'rss-parser'
 import { callOllama } from './ollama'
 import { saveScore, getScore, hashArticle, hashPreferences, saveFeeds, saveSettings, loadSettings, getEnabledFeeds, loadFeeds } from './cache'
 import { setUserInterest, setUserNotInterests, getUserInterests, getUserNotInterests, loadUserPreferencesFromCache, setUserPreferences } from './UserPreferences'
 import { createAppMenu } from './AppMenu'
-import { AppSettings, Feed } from './types'
+import { Article, AppSettings, Feed, ArticleVariant } from './types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -43,12 +42,20 @@ ipcMain.handle('settings:save', async (_, settings: AppSettings) => {
     await parseFeeds();
 });
 
-function getColumn(title: string, summary: string, image: string): string {
-    if(title === '' && summary === '' && image === '') return '';
-    if(image === '') return ['left', 'right'][Math.floor(Math.random() * 2)]
+function getColumn(title: string, summary: string, image: string): { column: string; variant?: ArticleVariant} {
+    if(title === '' && summary === '' && image === '') return { column: '' };
+    if(image === '') return { column: ['left', 'right'][Math.floor(Math.random() * 2)] };
+
     const rand = Math.random();
-    if (rand < 0.45) return 'middle';
-    return rand < 0.775 ? 'left' : 'right';
+    if (rand < 0.45) {
+        const variants: ArticleVariant[] = ['default', 'featured', 'compact', 'image-focus'];
+        const randomVariant: ArticleVariant = variants[Math.floor(Math.random() * variants.length)];
+        return {
+            column: 'middle',
+            variant: randomVariant
+        };
+    }
+    return { column: rand < 0.775 ? 'left' : 'right' };
 }
 
 async function fetchAndRank(feed: Feed, articles: Article[]) {
@@ -94,13 +101,15 @@ async function fetchAndRank(feed: Feed, articles: Article[]) {
                 fromCache++;
             }
 
+            const columnData = getColumn(articleTitle, articleSummary, imageUrl);
             var article: Article = {
                 title: articleTitle,
                 summary: articleSummary,
                 link: articleLink,
                 image: imageUrl,
-                column: getColumn(articleTitle, articleSummary, imageUrl),
+                column: columnData.column,
                 score: score,
+                variant: columnData.variant ?? 'default',
             };
 
             articles.push(article);

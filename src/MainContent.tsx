@@ -9,7 +9,7 @@ export default function MainContent({ articles }: MainContentProps) {
     return (
         <div className="main-grid">
             {articles.map((article, i) => {
-                if(article.variant === "middle") {
+                if(article.column === "middle") {
                     return(
                         <ArticleCard
                             key={i}
@@ -17,7 +17,7 @@ export default function MainContent({ articles }: MainContentProps) {
                             image={article.image}
                             summary={article.summary}
                             link={article.link}
-                            variant={article.variant}
+                            column={article.column}
                         />
                     );
                 }

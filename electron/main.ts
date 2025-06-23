@@ -8,7 +8,7 @@ import { callOllama } from './ollama'
 import { saveScore, getScore, hashArticle, hashPreferences, saveFeeds, saveSettings, loadSettings, getEnabledFeeds, loadFeeds } from './cache'
 import { setUserInterest, setUserNotInterests, getUserInterests, getUserNotInterests, loadUserPreferencesFromCache, setUserPreferences } from './UserPreferences'
 import { createAppMenu } from './AppMenu'
-import { Feed } from './types'
+import { AppSettings, Feed } from './types'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -36,12 +36,20 @@ ipcMain.handle('settings:load', () => {
     return loadSettings();
 });
 
-ipcMain.handle('settings:save', async (_, settings) => {
+ipcMain.handle('settings:save', async (_, settings: AppSettings) => {
     saveSettings(settings);
     setUserPreferences(settings.userInterests, settings.userNotInterests);
     loadUserPreferencesFromCache();
     await parseFeeds();
 });
+
+function getColumn(title: string, summary: string, image: string): string {
+    if(title === '' && summary === '' && image === '') return '';
+    if(image === '') return ['left', 'right'][Math.floor(Math.random() * 2)]
+    const rand = Math.random();
+    if (rand < 0.45) return 'middle';
+    return rand < 0.775 ? 'left' : 'right';
+}
 
 async function fetchAndRank(feed: Feed, articles: Article[]) {
     console.log('Fetching and ranking news articles...');
@@ -91,7 +99,7 @@ async function fetchAndRank(feed: Feed, articles: Article[]) {
                 summary: articleSummary,
                 link: articleLink,
                 image: imageUrl,
-                variant: ['left', 'middle', 'right'][Math.floor(Math.random() * 3)],
+                column: getColumn(articleTitle, articleSummary, imageUrl),
                 score: score,
             };
 

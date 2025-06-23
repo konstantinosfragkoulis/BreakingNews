@@ -9,7 +9,7 @@ export default function RightSidebar({ articles }: MainContentProps) {
     return (
         <div className="sidebar">
             {articles.map((article, i) => {
-                if(article.variant === "right") {
+                if(article.column === "right") {
                     return(
                         <ArticleCard
                             key={i}
@@ -17,7 +17,7 @@ export default function RightSidebar({ articles }: MainContentProps) {
                             image={article.image}
                             summary={article.summary}
                             link={article.link}
-                            variant={article.variant}
+                            column={article.column}
                         />
                     );
                 }

@@ -20,6 +20,8 @@ export const TOPIC_KEYWORDS = {
     'lifestyle_fashion': ['lifestyle', 'fashion', 'style', 'trends', 'beauty', 'grooming', 'skincare', 'fashion week', 'runway', 'designer', 'haute couture', 'streetwear', 'wellness', 'travel', 'foodie', 'home decor', 'interior design', 'relationships']
 };
 
+export type Theme = 'light' | 'dark' | 'system';
+
 export type Feed = {
     url: string;
     name?: string;
@@ -27,7 +29,7 @@ export type Feed = {
 };
 
 export type AppSettings = {
-    theme: 'light' | 'dark' | 'system';
+    theme: Theme;
     feeds: Feed[];
     userInterests: string[];
     userNotInterests: string[];

@@ -3,7 +3,7 @@ export type Article = {
   image: string;
   summary: string;
   link: string;
-  variant: string;
+  column: string;
   score: number;
 };
 
@@ -12,19 +12,19 @@ export default function ArticleCard({
     image,
     summary,
     link,
-    variant,
+    column,
 }: {
     title: string;
     image: string;
     summary: string;
     link: string;
-    variant: string;
+    column: string;
 }) {
     return (
-        <div className={variant}>
+        <div className={column}>
             <a href={link} target="_blank"><h2>{title}</h2></a>
-            <img className={variant} src={image} alt="" />
-            <p className={variant}>{summary}</p>
+            <img className={column} src={image} alt="" />
+            <p className={column}>{summary}</p>
         </div>
     );
 };

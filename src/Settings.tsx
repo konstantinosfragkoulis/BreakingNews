@@ -77,6 +77,18 @@ export default function Settings({ onClose }: SettingsProps) {
         }
     };
 
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                onClose();
+            }
+        };
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [onClose]);
+
     return (
         <div className="settings-overlay">
             <div className="settings-modal">

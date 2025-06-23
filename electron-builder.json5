@@ -4,6 +4,7 @@
   "appId": "com.kfragkoulis.breaking-news",
   "asar": true,
   "productName": "Breaking News",
+  "icon": "icon",
   "directories": {
     "output": "release/${version}"
   },

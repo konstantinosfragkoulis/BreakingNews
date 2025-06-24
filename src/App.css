@@ -85,45 +85,38 @@ a {
 .featured-summary {
     font-size: 1em;
     line-height: 1.5;
-    color: #666;
     margin: 0;
 }
 
 /* Compact Layout */
 .layout-compact {
-    display: flex;
+    /* display: flex;
     align-items: flex-start;
-    gap: 12px;
+    flex-direction: column;
+    gap: 12px; */
     padding: 12px;
-    border-left: 4px solid #28a745;
-    background: #f8f9fa;
     margin-bottom: 12px;
     border-radius: 4px;
 }
 
-.compact-content {
-    flex: 1;
+.compat-title h3 {
+    font-size: 1.3em;
+    margin: 0 0 8px 0;
 }
 
-.compact-title {
-    font-size: 1.1em;
-    margin: 0 0 8px 0;
-    color: #333;
+.compact-image {
+    float: right;
+    width: 70% !important;
+    height: 100%;
+    object-fit: cover;
+    margin-left: 12px;
+    border-radius: 4px;
 }
 
 .compact-summary {
     font-size: 0.9em;
-    color: #666;
     margin: 0;
     line-height: 1.4;
-}
-
-.compact-image {
-    width: 80px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 4px;
-    flex-shrink: 0;
 }
 
 /* Image Focus Layout */

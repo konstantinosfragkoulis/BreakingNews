@@ -47,7 +47,7 @@ function getColumn(title: string, summary: string, image: string): { column: str
     if(image === '') return { column: ['left', 'right'][Math.floor(Math.random() * 2)] };
 
     const rand = Math.random();
-    if (rand < 0.45) {
+    if (rand < 0.5) {
         const variants: ArticleVariant[] = ['default', 'featured', 'compact', 'image-focus'];
         const randomVariant: ArticleVariant = variants[Math.floor(Math.random() * variants.length)];
         return {
@@ -55,7 +55,7 @@ function getColumn(title: string, summary: string, image: string): { column: str
             variant: randomVariant
         };
     }
-    return { column: rand < 0.775 ? 'left' : 'right' };
+    return { column: rand < 0.75 ? 'left' : 'right' };
 }
 
 async function fetchAndRank(feed: Feed, articles: Article[]) {

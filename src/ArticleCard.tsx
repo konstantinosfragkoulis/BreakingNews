@@ -32,14 +32,14 @@ export default function ArticleCard({
             
             case 'compact':
                 return (
-                    <div className={`${column} layout-compact`}>
-                        <div className="compact-content">
-                            <a href={link} target="_blank">
-                                <h3 className="compact-title">{title}</h3>
-                            </a>
-                            <p className="compact-summary">{summary.substring(0, 100)}...</p>
-                        </div>
-                        {image && <img className="compact-image" src={image} alt="" />}
+                    <div className="layout-compact">
+                        <a href={link} target="_blank" className="compact-title">
+                        <h2>{title}</h2>
+                        </a>
+                        {image && (
+                        <img className="compact-image" src={image} alt="" />
+                        )}
+                        <p className="compact-summary">{summary}</p>
                     </div>
                 );
             
@@ -71,7 +71,7 @@ export default function ArticleCard({
     return (
         <div className={column}>
             <a href={link} target="_blank"><h2>{title}</h2></a>
-            <img className={column} src={image} alt="" />
+            {image && <img className={column} src={image} alt="" />}
             <p className={column}>{summary}</p>
         </div>
     );

@@ -42,13 +42,19 @@ ipcMain.handle('settings:save', async (_, settings: AppSettings) => {
     await parseFeeds();
 });
 
-function getColumn(title: string, summary: string, image: string): { column: string; variant?: ArticleVariant} {
+function getColumn(title: string, summary: string, image: string, score: number): { column: string; variant?: ArticleVariant} {
     if(title === '' && summary === '' && image === '') return { column: '' };
     if(image === '') return { column: ['left', 'right'][Math.floor(Math.random() * 2)] };
 
     const rand = Math.random();
     if (rand < 0.5) {
-        const variants: ArticleVariant[] = ['default', 'featured', 'compact', 'image-focus'];
+        if(score > 95) {
+            return {
+                column: 'middle',
+                variant: 'featured'
+            };
+        }
+        const variants: ArticleVariant[] = ['default', 'compact', 'image-focus'];
         const randomVariant: ArticleVariant = variants[Math.floor(Math.random() * variants.length)];
         return {
             column: 'middle',
@@ -101,7 +107,7 @@ async function fetchAndRank(feed: Feed, articles: Article[]) {
                 fromCache++;
             }
 
-            const columnData = getColumn(articleTitle, articleSummary, imageUrl);
+            const columnData = getColumn(articleTitle, articleSummary, imageUrl, score);
             var article: Article = {
                 title: articleTitle,
                 summary: articleSummary,
@@ -143,7 +149,7 @@ async function parseFeeds() {
     }
 
     articles.sort((a, b) => b.score - a.score);
-    win?.webContents.send('news:update', articles.slice(0, 30));
+    win?.webContents.send('news:update', articles.slice(0, 50));
 }
 
 function createWindow() {

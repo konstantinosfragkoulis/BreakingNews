@@ -60,7 +60,7 @@ export default function ArticleCard({
             
             default:
                 return (
-                    <div className={column}>
+                    <div className={`${column} layout-default`}>
                         <a href={link} target="_blank"><h2>{title}</h2></a>
                         <img className={column} src={image} alt="" />
                         <p className={column}>{summary}</p>

@@ -25,7 +25,14 @@
 
 .sidebar {
     width: 100%;
-    padding: 0 6px 0 6px;
+}
+
+.left-sidebar {
+    padding: 0 0 0 6px;
+}
+
+.right-sidebar {
+    padding: 0 6px 0 0;
 }
 
 .sidebar img{

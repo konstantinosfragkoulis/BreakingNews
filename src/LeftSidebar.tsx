@@ -7,7 +7,7 @@ type MainContentProps = {
 
 export default function LeftSidebar({ articles }: MainContentProps) {
     return (
-        <div className="sidebar">
+        <div className="sidebar left-sidebar">
             {articles.map((article, i) => {
                 if(article.column === "left") {
                     return(

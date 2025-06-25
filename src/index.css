@@ -1,14 +1,31 @@
 :root {
-  font-family: 'Merriweather', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+    --font-serif: 'Merriweather', serif;
+    --font-sans: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+    --color-bg: #121212;
+    --color-surface: #1e1e1e;
+    --color-on-surface: rgba(255, 255, 255, 0.87);
+    --color-primary: #4dabf7;
+    --color-border: #333;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    --spacing-xs: 4px;
+    --spacing-s: 8px;
+    --spacing-m: 16px;
+    --spacing-l: 24px;
+    --spacing-xl: 32px;
+
+    --border-radius: 4px;
+
+    font-family: var(--font-serif);
+    line-height: 1.6;
+    font-weight: 400;
+
+    color-scheme: dark;
+    color: var(--color-on-surface);
+    background-color: var(--color-bg);
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }

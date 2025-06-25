@@ -4,7 +4,7 @@ import path from 'node:path'
 import { parse } from 'rss-to-json'
 import Parser from 'rss-parser'
 import { callOllama } from './ollama'
-import { saveScore, getScore, hashArticle, hashPreferences, saveFeeds, saveSettings, loadSettings, getEnabledFeeds, loadFeeds } from './cache'
+import { saveScore, getScore, hashArticle, hashPreferences, saveFeeds, saveSettings, loadSettings, getEnabledFeeds, loadFeeds, prune } from './cache'
 import { setUserInterest, setUserNotInterests, getUserInterests, getUserNotInterests, loadUserPreferencesFromCache, setUserPreferences } from './UserPreferences'
 import { createAppMenu } from './AppMenu'
 import { Article, AppSettings, Feed, ArticleVariant } from './types'
@@ -132,6 +132,8 @@ async function fetchAndRank(feed: Feed, articles: Article[]) {
 } 
 
 async function parseFeeds() {
+    prune();
+
     let feeds: Feed[] = getEnabledFeeds();
     let allFeeds: Feed[] = loadFeeds();
     if(feeds.length === 0 && allFeeds.length === 0) {
@@ -173,6 +175,8 @@ function createWindow() {
         win.loadFile(path.join(RENDERER_DIST, 'index.html'))
     }
     createAppMenu();
+
+    prune();
 
     loadUserPreferencesFromCache();
     if(getUserInterests().length === 0 && getUserNotInterests().length === 0) {

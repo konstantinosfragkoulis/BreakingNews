@@ -4,7 +4,7 @@ import os from 'os';
 import path from 'path';
 
 import { getUserInterests, getUserNotInterests } from './UserPreferences';
-import { AppSettings, CacheData, Feed } from './types';
+import { AppSettings, ArticleScores, CacheData, Feed } from './types';
 
 const CACHE_FILE: string = path.join(os.homedir(), '.breakingnews.json');
 
@@ -128,4 +128,29 @@ export function saveSettings(settings: AppSettings): void {
 export function getEnabledFeeds(): Feed[] {
     const settings = loadSettings();
     return settings.feeds.filter(feed => feed.enabled);
+}
+
+export function prune(): void {
+    const data = loadCacheData();
+    const old = new Date();
+    old.setDate(old.getDate() - 7);
+
+    let pruned = 0;
+    const articlesToKeep: Record<string, ArticleScores> = {};
+
+    for(const [hash, article] of Object.entries(data.articles)) {
+        const articleDate = new Date(article.pubDate);
+        if(articleDate >= old) {
+            articlesToKeep[hash] = article;
+        }
+        else {
+            pruned++;
+        }
+    }
+
+    if(pruned > 0) {
+        console.log(`Pruned ${pruned} old articles from cache.`);
+        data.articles = articlesToKeep;
+        saveCacheData(data);
+    }
 }

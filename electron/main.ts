@@ -46,9 +46,10 @@ function getColumn(title: string, summary: string, image: string, score: number)
     if(title === '' && summary === '' && image === '') return { column: '' };
     if(image === '') return { column: ['left', 'right'][Math.floor(Math.random() * 2)] };
 
+    console.log("score : ", score)
     const rand = Math.random();
     if (rand < 0.5) {
-        if(score > 95) {
+        if(score >= 95) {
             return {
                 column: 'middle',
                 variant: 'featured'
